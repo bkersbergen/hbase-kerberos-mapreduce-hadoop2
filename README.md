@@ -1,7 +1,7 @@
 hbase-kerberos-mapreduce-hadoop2
 ================================
 
-example hbase with hadoop2 and kerberos
+Example of how to do HBase calls in a mapper or reducer with Kerberos security configured in hadoop.
 
 [bkersbergen@hdp211 hbase-hdp]$ kinit
 Password for bkersbergen@BOLCOM.NET: *************
