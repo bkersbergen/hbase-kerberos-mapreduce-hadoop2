@@ -3,6 +3,22 @@ hbase-kerberos-mapreduce-hadoop2
 
 Example of how to do HBase calls in a mapper or reducer with Kerberos security configured in hadoop.
 
+Because we were having issues like:
+http://grokbase.com/t/hbase/user/12be21k9wh/unable-to-access-hbase-from-a-mapper
+<CUT>
+2012-11-14 10:55:24,486 ERROR org.apache.hadoop.security.UserGroupInformation: PriviledgedActionException as:subroto (auth:SIMPLE) cause:javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)]
+2012-11-14 10:55:24,490 WARN org.apache.hadoop.ipc.SecureClient: Exception encountered while connecting to the server : javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)]
+2012-11-14 10:55:24,493 FATAL org.apache.hadoop.ipc.SecureClient: SASL authentication failed. The most likely cause is missing or invalid credentials. Consider 'kinit'.
+<CUT>
+
+
+The solution was simple in the end, however it took me a while to figure it out.
+
+Hbase make sure you have access to your database (hbase shell):
+grant 'bkersbergen', 'RWX', 'reco_product_catalog'
+
+
+
 [bkersbergen@hdp211 hbase-hdp]$ kinit
 Password for bkersbergen@BOLCOM.NET: *************
 [bkersbergen@hdp211 hbase-hdp]$ ./build_run.sh; hadoop fs -text output/part*
