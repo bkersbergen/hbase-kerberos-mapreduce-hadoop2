@@ -5,56 +5,57 @@ Example of how to do HBase calls in a mapper or reducer with Kerberos security c
 
 Because we were having issues like:
 http://grokbase.com/t/hbase/user/12be21k9wh/unable-to-access-hbase-from-a-mapper
-<CUT>
-2012-11-14 10:55:24,486 ERROR org.apache.hadoop.security.UserGroupInformation: PriviledgedActionException as:subroto (auth:SIMPLE) cause:javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)]
-2012-11-14 10:55:24,490 WARN org.apache.hadoop.ipc.SecureClient: Exception encountered while connecting to the server : javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)]
-2012-11-14 10:55:24,493 FATAL org.apache.hadoop.ipc.SecureClient: SASL authentication failed. The most likely cause is missing or invalid credentials. Consider 'kinit'.
-<CUT>
+
+    2012-11-14 10:55:24,486 ERROR org.apache.hadoop.security.UserGroupInformation: PriviledgedActionException as:subroto (auth:SIMPLE) cause:javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)]
+    2012-11-14 10:55:24,490 WARN org.apache.hadoop.ipc.SecureClient: Exception encountered while connecting to the server : javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)]
+    2012-11-14 10:55:24,493 FATAL org.apache.hadoop.ipc.SecureClient: SASL authentication failed. The most likely cause is missing or invalid credentials. Consider 'kinit'.
 
 
 The solution was simple in the end, however it took me a while to figure it out.
 
 Hbase make sure you have access to your database (hbase shell):
-grant 'bkersbergen', 'RWX', 'reco_product_catalog'
+
+    grant 'bkersbergen', 'RWX', 'reco_product_catalog'
+
+and then it all works
+
+    [bkersbergen@hdp211 hbase-hdp]$ kinit
+    Password for bkersbergen@BOLCOM.NET: *************
+    [bkersbergen@hdp211 hbase-hdp]$ ./build_run.sh; hadoop fs -text output/part*
+    [INFO] Scanning for projects...
+    [INFO]
+    [INFO] Using the builder org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder with a thread count of 1
+    [INFO]
+    [INFO] ------------------------------------------------------------------------
+    [INFO] Building hbasetest development
+    [INFO] ------------------------------------------------------------------------
+    [INFO]
 
 
-
-[bkersbergen@hdp211 hbase-hdp]$ kinit
-Password for bkersbergen@BOLCOM.NET: *************
-[bkersbergen@hdp211 hbase-hdp]$ ./build_run.sh; hadoop fs -text output/part*
-[INFO] Scanning for projects...
-[INFO]
-[INFO] Using the builder org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder with a thread count of 1
-[INFO]
-[INFO] ------------------------------------------------------------------------
-[INFO] Building hbasetest development
-[INFO] ------------------------------------------------------------------------
-[INFO]
-<cut>
-14/08/07 11:05:32 INFO zookeeper.ClientCnxn: Socket connection established to myhadoopcluster/10.10.200.33:2181, initiating session
-14/08/07 11:05:32 INFO zookeeper.ClientCnxn: Session establishment complete on server myhadoopcluster/10.10.200.33:2181, sessionid = 0x247a0b6b3ac0109, negotiated timeout = 300000
-14/08/07 11:05:33 INFO client.ConnectionManager$HConnectionImplementation: Closing zookeeper sessionid=0x247a0b6b3ac0109
-14/08/07 11:05:33 INFO zookeeper.ZooKeeper: Session: 0x247a0b6b3ac0109 closed
-14/08/07 11:05:33 INFO zookeeper.ClientCnxn: EventThread shut down
-14/08/07 11:05:33 INFO token.TokenUtil: Obtained token HBASE_AUTH_TOKEN for user bkersbergen@BOLCOM.NET on cluster ec65ff69-e715-425c-8277-afaa578a3135
-14/08/07 11:05:33 INFO hdfs.DFSClient: Created HDFS_DELEGATION_TOKEN token 3216 for bkersbergen on ha-hdfs:hdp-b
-14/08/07 11:05:33 INFO security.TokenCache: Got dt for hdfs://hdp-b:8020; Kind: HDFS_DELEGATION_TOKEN, Service: ha-hdfs:hdp-b, Ident: (HDFS_DELEGATION_TOKEN token 3216 for bkersbergen)
-14/08/07 11:05:59 INFO input.FileInputFormat: Total input paths to process : 1
-14/08/07 11:06:00 INFO mapreduce.JobSubmitter: number of splits:1
-14/08/07 11:06:00 INFO mapreduce.JobSubmitter: Submitting tokens for job: job_1407336338642_0221
-14/08/07 11:06:00 INFO mapreduce.JobSubmitter: Kind: HDFS_DELEGATION_TOKEN, Service: ha-hdfs:hdp-b, Ident: (HDFS_DELEGATION_TOKEN token 3216 for bkersbergen)
-14/08/07 11:06:00 WARN token.Token: Cannot find class for token kind HBASE_AUTH_TOKEN
-14/08/07 11:06:00 WARN token.Token: Cannot find class for token kind HBASE_AUTH_TOKEN
-Kind: HBASE_AUTH_TOKEN, Service: ec65ff69-e715-425c-8277-afaa578a3135, Ident: 00 00 00 2c 08 00 12 16 62 6b 65 72 73 62 65 72 67 65 6e 40 42 4f 4c 43 4f 4d 2e 4e 45 54 18 0f 20 c6 ad dd fd fa 28 28 c6 b5 8f 9e fd 28 30 3f
-14/08/07 11:06:02 INFO impl.YarnClientImpl: Submitted application application_1407336338642_0221
-14/08/07 11:06:02 INFO mapreduce.Job: The url to track the job: http://myhadoopcluster:8088/proxy/application_1407336338642_0221/
-14/08/07 11:06:02 INFO mapreduce.Job: Running job: job_1407336338642_0221
-14/08/07 11:06:11 INFO mapreduce.Job: Job job_1407336338642_0221 running in uber mode : false
-14/08/07 11:06:15 INFO mapreduce.Job:  map 0% reduce 0%
-14/08/07 11:06:25 INFO mapreduce.Job:  map 100% reduce 0%
-14/08/07 11:06:30 INFO mapreduce.Job:  map 100% reduce 100%
-14/08/07 11:06:34 INFO mapreduce.Job: Job job_1407336338642_0221 completed successfully
-14/08/07 11:06:34 INFO mapreduce.Job: Counters: 49
+    14/08/07 11:05:32 INFO zookeeper.ClientCnxn: Socket connection established to myhadoopcluster/10.10.200.33:2181, initiating session
+    14/08/07 11:05:32 INFO zookeeper.ClientCnxn: Session establishment complete on server myhadoopcluster/10.10.200.33:2181, sessionid = 0x247a0b6b3ac0109, negotiated timeout = 300000
+    14/08/07 11:05:33 INFO client.ConnectionManager$HConnectionImplementation: Closing zookeeper sessionid=0x247a0b6b3ac0109
+    14/08/07 11:05:33 INFO zookeeper.ZooKeeper: Session: 0x247a0b6b3ac0109 closed
+    14/08/07 11:05:33 INFO zookeeper.ClientCnxn: EventThread shut down
+    14/08/07 11:05:33 INFO token.TokenUtil: Obtained token HBASE_AUTH_TOKEN for user bkersbergen@BOLCOM.NET on cluster ec65ff69-e715-425c-8277-afaa578a3135
+    14/08/07 11:05:33 INFO hdfs.DFSClient: Created HDFS_DELEGATION_TOKEN token 3216 for bkersbergen on ha-hdfs:hdp-b
+    14/08/07 11:05:33 INFO security.TokenCache: Got dt for hdfs://hdp-b:8020; Kind: HDFS_DELEGATION_TOKEN, Service: ha-hdfs:hdp-b, Ident: (HDFS_DELEGATION_TOKEN token 3216 for bkersbergen)
+    14/08/07 11:05:59 INFO input.FileInputFormat: Total input paths to process : 1
+    14/08/07 11:06:00 INFO mapreduce.JobSubmitter: number of splits:1
+    14/08/07 11:06:00 INFO mapreduce.JobSubmitter: Submitting tokens for job: job_1407336338642_0221
+    14/08/07 11:06:00 INFO mapreduce.JobSubmitter: Kind: HDFS_DELEGATION_TOKEN, Service: ha-hdfs:hdp-b, Ident: (HDFS_DELEGATION_TOKEN token 3216 for bkersbergen)
+    14/08/07 11:06:00 WARN token.Token: Cannot find class for token kind HBASE_AUTH_TOKEN
+    14/08/07 11:06:00 WARN token.Token: Cannot find class for token kind HBASE_AUTH_TOKEN
+    Kind: HBASE_AUTH_TOKEN, Service: ec65ff69-e715-425c-8277-afaa578a3135, Ident: 00 00 00 2c 08 00 12 16 62 6b 65 72 73 62 65 72 67 65 6e 40 42 4f 4c 43 4f 4d 2e 4e 45 54 18 0f 20 c6 ad dd fd fa 28 28 c6 b5 8f 9e fd 28 30 3f
+    14/08/07 11:06:02 INFO impl.YarnClientImpl: Submitted application application_1407336338642_0221
+    14/08/07 11:06:02 INFO mapreduce.Job: The url to track the job: http://myhadoopcluster:8088/proxy/application_1407336338642_0221/
+    14/08/07 11:06:02 INFO mapreduce.Job: Running job: job_1407336338642_0221
+    14/08/07 11:06:11 INFO mapreduce.Job: Job job_1407336338642_0221 running in uber mode : false
+    14/08/07 11:06:15 INFO mapreduce.Job:  map 0% reduce 0%
+    14/08/07 11:06:25 INFO mapreduce.Job:  map 100% reduce 0%
+    14/08/07 11:06:30 INFO mapreduce.Job:  map 100% reduce 100%
+    14/08/07 11:06:34 INFO mapreduce.Job: Job job_1407336338642_0221 completed successfully
+    14/08/07 11:06:34 INFO mapreduce.Job: Counters: 49
         File System Counters
                 FILE: Number of bytes read=3726
                 FILE: Number of bytes written=266595
