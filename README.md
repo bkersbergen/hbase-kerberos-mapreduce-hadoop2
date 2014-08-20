@@ -13,14 +13,28 @@ http://grokbase.com/t/hbase/user/12be21k9wh/unable-to-access-hbase-from-a-mapper
 
 The solution was simple in the end, however it took me a while to figure it out.
 
-Hbase make sure you have access to your database (hbase shell):
-
-    grant 'bkersbergen', 'RWX', 'reco_product_catalog'
-
-and then it all works
+First authenticate myself
 
     [bkersbergen@hdp211 hbase-hdp]$ kinit
     Password for bkersbergen@BOLCOM.NET: *************
+
+Grant myself access to the Hbase table (hbase shell):
+
+    grant 'bkersbergen', 'RWX', 'reco_product_catalog'
+
+verify I have access to the Hbase table (hbase shell)
+    
+    scan 'reco_product_catalog'
+    SLF4J: Class path contains multiple SLF4J bindings.
+    SLF4J: Found binding in [jar:file:/usr/lib/hadoop/lib/slf4j-log4j12-1.7.5.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+    SLF4J: Found binding in [jar:file:/usr/lib/zookeeper/lib/slf4j-log4j12-1.6.1.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+    SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+    ROW                      COLUMN+CELL
+    0                       column=c:p, timestamp=1406657630994, value={"_id":"0","globalID":"0 (..and the rest of your hbase table)
+
+
+Then run the hadoop job:
+
     [bkersbergen@hdp211 hbase-hdp]$ ./build_run.sh; hadoop fs -text output/part*
     [INFO] Scanning for projects...
     [INFO]
